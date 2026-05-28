@@ -33,6 +33,8 @@ protected:
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
 public:
+	template <typename FilterFunc>
+	afx_msg void ProcessPixels(FilterFunc filter);
 	afx_msg void OnBnClickedBtnOpen();
 	afx_msg void OnBnClickedBtnGray();
 	afx_msg void OnBnClickedBtnSepia();

@@ -206,7 +206,17 @@ void CRetroPhotoStudioDlg::OnBnClickedBtnOpen()
 	}
 
 }
-void CRetroPhotoStudioDlg::OnBnClickedBtnGray()
+
+void ExtractImageInfo(CImage& image, int& width, int& height, int& pitch, int& bpp)
+{
+	width = image.GetWidth();
+	height = image.GetHeight();
+	pitch = image.GetPitch(); // 한 줄의 바이트 수
+	bpp = image.GetBPP(); // 픽셀당 비트 수 Bits Per Pixel (예: 24, 32)
+}
+
+template <typename FilterFunc>
+void CRetroPhotoStudioDlg::ProcessPixels(FilterFunc filter)
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
 	// 1. 이미지가 로드되어 있는지 확인
@@ -215,71 +225,10 @@ void CRetroPhotoStudioDlg::OnBnClickedBtnGray()
 		AfxMessageBox(_T("먼저 이미지를 열어주세요."));
 		return;
 	}
-	// 2. 이미지의 정보 가져오기
-	int width = m_image.GetWidth();
-	int height = m_image.GetHeight();
-	int pitch = m_image.GetPitch(); // 한 줄의 바이트 수
-	int bpp = m_image.GetBPP(); // 픽셀당 비트 수 Bits Per Pixel (예: 24, 32)
-
-	// 3. 픽셀 데이터의 시작 주소 가져오기
-	byte* pBits = (byte*)m_image.GetBits();
-
-	// 24비트(RGB) 또는 32비트(RGBA) 이미지인지 확인
-	if(bpp != 24 && bpp != 32)
-	{
-		AfxMessageBox(_T("지원되지 않는 이미지 형식입니다. 24비트 또는 32비트 이미지를 사용해주세요."));
-		return;
-	}
-
-	int bytesPerPixel = bpp / 8; // 픽셀당 바이트 수 (3 또는 4)
-
-	// 4. 픽셀 데이터를 순회하면서 그레이스케일로 변환
-	for (int y = 0; y < height; ++y)
-	{
-		// Y축의 각 줄(Row)의 시작 포인터 계산(Pitch 사용 필수)
-		byte* pRow = pBits + (y * pitch);
-
-		for (int x = 0; x < width; ++x)
-		{
-			// 현재 픽셀의 포인터 위치 계산
-			byte* pPixel = pRow + (x * bytesPerPixel);
-
-			// Windows 메모리 상에서는 RGB가 아니라 BGR 순서로 저장되어있음
-			byte B = pPixel[0];
-			byte G = pPixel[1];
-			byte R = pPixel[2];
-
-			// 자연스러운 흑백(NTSC 보정 공식) 적용
-			byte gray =
-				(byte)(0.299 * R + 0.587 * G + 0.114 * B);
-
-			// R, G, B 채널에 모두 그레이 값으로 덮어쓰기
-			pPixel[0] = gray; // B
-			pPixel[1] = gray; // G
-			pPixel[2] = gray; // R
-		}
-	}
-
-	// 5. 화면갱신
-	// OnPaint() 함수에서 이미지가 그려질 때, m_image.Draw()가 호출되므로
-	// Invalidate()를 호출하여 대화 상자를 다시 그리도록 요청합니다.
-	Invalidate();
-}
-
-void CRetroPhotoStudioDlg::OnBnClickedBtnSepia()
-{
-	// 1. 이미지가 로드되어 있는지 확인
-	if (m_image.IsNull())
-	{
-		AfxMessageBox(_T("먼저 이미지를 열어주세요."));
-		return;
-	}
 
 	// 2. 이미지의 정보 가져오기
-	int width = m_image.GetWidth();
-	int height = m_image.GetHeight();
-	int pitch = m_image.GetPitch(); // 한 줄의 바이트 수
-	int bpp = m_image.GetBPP(); // 픽셀당 비트 수 Bits Per Pixel (예: 24, 32)
+	int width, height, pitch, bpp;
+	ExtractImageInfo(m_image, width, height, pitch, bpp);
 
 	// 3. 픽셀 데이터의 시작 주소 가져오기
 	byte* pBits = (byte*)m_image.GetBits();
@@ -293,29 +242,57 @@ void CRetroPhotoStudioDlg::OnBnClickedBtnSepia()
 
 	int bytesPerPixel = bpp / 8; // 픽셀당 바이트 수 (3 또는 4)
 
-	// 4. 픽셀 데이터를 순회하면서 세피아 효과 적용
+
+	// 4. 픽셀 데이터를 순회하면서 그레이스케일로 변환
 	for (int y = 0; y < height; ++y)
 	{
+
+		// Y축의 각 줄(Row)의 시작 포인터 계산(Pitch 사용 필수)
 		byte* pRow = pBits + (y * pitch);
+
 		for (int x = 0; x < width; ++x)
 		{
+			// 현재 픽셀의 포인터 위치 계산
 			byte* pPixel = pRow + (x * bytesPerPixel);
+
+			// Windows 메모리 상에서는 RGB가 아니라 BGR 순서로 저장되어있음
 			byte B = pPixel[0];
 			byte G = pPixel[1];
 			byte R = pPixel[2];
-			// 세피아 효과 공식 적용
-			// 세피아 공식 적용 (계산 결과가 255를 넘을 수 있으므로 int로 계산)
-			int tr = (int)(0.393 * R + 0.769 * G + 0.189 * B);
-			int tg = (int)(0.349 * R + 0.686 * G + 0.168 * B);
-			int tb = (int)(0.272 * R + 0.534 * G + 0.131 * B);
 
-			// RGB 값은 255를 넘을 수 없으므로, 255 초과 시 255로 제한(Clamping)
-			pPixel[2] = (tr > 255) ? 255 : (byte)tr; // R 채널 덮어쓰기
-			pPixel[1] = (tg > 255) ? 255 : (byte)tg; // G 채널 덮어쓰기
-			pPixel[0] = (tb > 255) ? 255 : (byte)tb; // B 채널 덮어쓰기
+			// 필터 타입에 따라 다른 효과 적용
+			filter(pPixel, R, G, B);
 		}
-	}
 
-	// 5. 화면갱신
-	Invalidate();
+		// 5. 화면갱신
+		// OnPaint() 함수에서 이미지가 그려질 때, m_image.Draw()가 호출되므로
+		// Invalidate()를 호출하여 대화 상자를 다시 그리도록 요청합니다.
+		Invalidate();
+	}
+}
+
+void CRetroPhotoStudioDlg::OnBnClickedBtnGray()
+{
+	ProcessPixels([](byte* pPixel, byte R, byte G, byte B) {
+		// 그레이스케일 변환 공식: Gray = 0.299 * R + 0.587 * G + 0.114 * B
+		byte gray = static_cast<byte>(0.299 * R + 0.587 * G + 0.114 * B);
+		pPixel[0] = gray; // B
+		pPixel[1] = gray; // G
+		pPixel[2] = gray; // R		
+	});
+}
+
+void CRetroPhotoStudioDlg::OnBnClickedBtnSepia()
+{
+	// 람다식을 이용해 세피아 공식만 템플릿 함수로 전달
+	ProcessPixels([](byte* pPixel, byte R, byte G, byte B) {
+		int tr = (int)(0.393 * R + 0.769 * G + 0.189 * B);
+		int tg = (int)(0.349 * R + 0.686 * G + 0.168 * B);
+		int tb = (int)(0.272 * R + 0.534 * G + 0.131 * B);
+
+		// 지역 변수 R,G,B가 아니라, 실제 이미지 메모리(pPixel)에 덮어쓰기!
+		pPixel[2] = (tr > 255) ? 255 : (byte)tr; // R
+		pPixel[1] = (tg > 255) ? 255 : (byte)tg; // G
+		pPixel[0] = (tb > 255) ? 255 : (byte)tb; // B
+	});
 }
