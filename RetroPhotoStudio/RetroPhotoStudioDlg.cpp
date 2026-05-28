@@ -66,6 +66,7 @@ BEGIN_MESSAGE_MAP(CRetroPhotoStudioDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_BTN_OPEN, &CRetroPhotoStudioDlg::OnBnClickedBtnOpen)
+	ON_BN_CLICKED(IDC_BTN_GRAY, &CRetroPhotoStudioDlg::OnBnClickedBtnGray)
 END_MESSAGE_MAP()
 
 
@@ -203,4 +204,63 @@ void CRetroPhotoStudioDlg::OnBnClickedBtnOpen()
 		Invalidate(); // 이미지가 로드된 후 대화 상자를 다시 그리도록 요청
 	}
 
+}
+void CRetroPhotoStudioDlg::OnBnClickedBtnGray()
+{
+	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
+	// 1. 이미지가 로드되어 있는지 확인
+	if (m_image.IsNull())
+	{
+		AfxMessageBox(_T("먼저 이미지를 열어주세요."));
+		return;
+	}
+	// 2. 이미지의 정보 가져오기
+	int width = m_image.GetWidth();
+	int height = m_image.GetHeight();
+	int pitch = m_image.GetPitch(); // 한 줄의 바이트 수
+	int bpp = m_image.GetBPP(); // 픽셀당 비트 수 Bits Per Pixel (예: 24, 32)
+
+	// 3. 픽셀 데이터의 시작 주소 가져오기
+	byte* pBits = (byte*)m_image.GetBits();
+
+	// 24비트(RGB) 또는 32비트(RGBA) 이미지인지 확인
+	if(bpp != 24 && bpp != 32)
+	{
+		AfxMessageBox(_T("지원되지 않는 이미지 형식입니다. 24비트 또는 32비트 이미지를 사용해주세요."));
+		return;
+	}
+
+	int bytesPerPixel = bpp / 8; // 픽셀당 바이트 수 (3 또는 4)
+
+	// 4. 픽셀 데이터를 순회하면서 그레이스케일로 변환
+	for (int y = 0; y < height; ++y)
+	{
+		// Y축의 각 줄(Row)의 시작 포인터 계산(Pitch 사용 필수)
+		byte* pRow = pBits + (y * pitch);
+
+		for (int x = 0; x < width; ++x)
+		{
+			// 현재 픽셀의 포인터 위치 계산
+			byte* pPixel = pRow + (x * bytesPerPixel);
+
+			// Windows 메모리 상에서는 RGB가 아니라 BGR 순서로 저장되어있음
+			byte B = pPixel[0];
+			byte G = pPixel[1];
+			byte R = pPixel[2];
+
+			// 자연스러운 흑백(NTSC 보정 공식) 적용
+			byte gray =
+				(byte)(0.299 * R + 0.587 * G + 0.114 * B);
+
+			// R, G, B 채널에 모두 그레이 값으로 덮어쓰기
+			pPixel[0] = gray; // B
+			pPixel[1] = gray; // G
+			pPixel[2] = gray; // R
+		}
+	}
+
+	// 5. 화면갱신
+	// OnPaint() 함수에서 이미지가 그려질 때, m_image.Draw()가 호출되므로
+	// Invalidate()를 호출하여 대화 상자를 다시 그리도록 요청합니다.
+	Invalidate();
 }
