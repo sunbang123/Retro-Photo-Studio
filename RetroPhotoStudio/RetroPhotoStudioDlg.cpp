@@ -67,6 +67,7 @@ BEGIN_MESSAGE_MAP(CRetroPhotoStudioDlg, CDialogEx)
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_BTN_OPEN, &CRetroPhotoStudioDlg::OnBnClickedBtnOpen)
 	ON_BN_CLICKED(IDC_BTN_GRAY, &CRetroPhotoStudioDlg::OnBnClickedBtnGray)
+	ON_BN_CLICKED(IDC_BTN_SEPIA, &CRetroPhotoStudioDlg::OnBnClickedBtnSepia)
 END_MESSAGE_MAP()
 
 
@@ -262,5 +263,59 @@ void CRetroPhotoStudioDlg::OnBnClickedBtnGray()
 	// 5. 화면갱신
 	// OnPaint() 함수에서 이미지가 그려질 때, m_image.Draw()가 호출되므로
 	// Invalidate()를 호출하여 대화 상자를 다시 그리도록 요청합니다.
+	Invalidate();
+}
+
+void CRetroPhotoStudioDlg::OnBnClickedBtnSepia()
+{
+	// 1. 이미지가 로드되어 있는지 확인
+	if (m_image.IsNull())
+	{
+		AfxMessageBox(_T("먼저 이미지를 열어주세요."));
+		return;
+	}
+
+	// 2. 이미지의 정보 가져오기
+	int width = m_image.GetWidth();
+	int height = m_image.GetHeight();
+	int pitch = m_image.GetPitch(); // 한 줄의 바이트 수
+	int bpp = m_image.GetBPP(); // 픽셀당 비트 수 Bits Per Pixel (예: 24, 32)
+
+	// 3. 픽셀 데이터의 시작 주소 가져오기
+	byte* pBits = (byte*)m_image.GetBits();
+
+	// 24비트(RGB) 또는 32비트(RGBA) 이미지인지 확인
+	if (bpp != 24 && bpp != 32)
+	{
+		AfxMessageBox(_T("지원되지 않는 이미지 형식입니다. 24비트 또는 32비트 이미지를 사용해주세요."));
+		return;
+	}
+
+	int bytesPerPixel = bpp / 8; // 픽셀당 바이트 수 (3 또는 4)
+
+	// 4. 픽셀 데이터를 순회하면서 세피아 효과 적용
+	for (int y = 0; y < height; ++y)
+	{
+		byte* pRow = pBits + (y * pitch);
+		for (int x = 0; x < width; ++x)
+		{
+			byte* pPixel = pRow + (x * bytesPerPixel);
+			byte B = pPixel[0];
+			byte G = pPixel[1];
+			byte R = pPixel[2];
+			// 세피아 효과 공식 적용
+			// 세피아 공식 적용 (계산 결과가 255를 넘을 수 있으므로 int로 계산)
+			int tr = (int)(0.393 * R + 0.769 * G + 0.189 * B);
+			int tg = (int)(0.349 * R + 0.686 * G + 0.168 * B);
+			int tb = (int)(0.272 * R + 0.534 * G + 0.131 * B);
+
+			// RGB 값은 255를 넘을 수 없으므로, 255 초과 시 255로 제한(Clamping)
+			pPixel[2] = (tr > 255) ? 255 : (byte)tr; // R 채널 덮어쓰기
+			pPixel[1] = (tg > 255) ? 255 : (byte)tg; // G 채널 덮어쓰기
+			pPixel[0] = (tb > 255) ? 255 : (byte)tb; // B 채널 덮어쓰기
+		}
+	}
+
+	// 5. 화면갱신
 	Invalidate();
 }

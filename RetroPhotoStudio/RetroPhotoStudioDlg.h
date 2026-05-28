@@ -35,4 +35,5 @@ protected:
 public:
 	afx_msg void OnBnClickedBtnOpen();
 	afx_msg void OnBnClickedBtnGray();
+	afx_msg void OnBnClickedBtnSepia();
 };
