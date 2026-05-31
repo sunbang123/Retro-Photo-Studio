@@ -68,6 +68,12 @@ BEGIN_MESSAGE_MAP(CRetroPhotoStudioDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_OPEN, &CRetroPhotoStudioDlg::OnBnClickedBtnOpen)
 	ON_BN_CLICKED(IDC_BTN_GRAY, &CRetroPhotoStudioDlg::OnBnClickedBtnGray)
 	ON_BN_CLICKED(IDC_BTN_SEPIA, &CRetroPhotoStudioDlg::OnBnClickedBtnSepia)
+	ON_BN_CLICKED(IDC_BTN_R_Filter, &CRetroPhotoStudioDlg::OnBnClickedBtnRFilter)
+	ON_BN_CLICKED(IDC_BTN_B_Filter, &CRetroPhotoStudioDlg::OnBnClickedBtnBFilter)
+	ON_BN_CLICKED(IDC_BTN_G_Filter, &CRetroPhotoStudioDlg::OnBnClickedBtnGFilter)
+	ON_BN_CLICKED(IDC_BTN_R_Channel, &CRetroPhotoStudioDlg::OnBnClickedBtnRChannel)
+	ON_BN_CLICKED(IDC_BTN_B_Channel, &CRetroPhotoStudioDlg::OnBnClickedBtnBChannel)
+	ON_BN_CLICKED(IDC_BTN_G_Channel, &CRetroPhotoStudioDlg::OnBnClickedBtnGChannel)
 END_MESSAGE_MAP()
 
 
@@ -173,35 +179,50 @@ HCURSOR CRetroPhotoStudioDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
+void CRetroPhotoStudioDlg::RestoreOriginalImage()
+{
+	if (m_origImage.IsNull()) return;
+
+	// 기존 작업용 도화지가 있다면 폐기
+	if (!m_image.IsNull()) m_image.Destroy();
+
+	// 원본과 똑같은 크기의 새 도화지 생성
+	m_image.Create(m_origImage.GetWidth(), m_origImage.GetHeight(), m_origImage.GetBPP());
+
+	// 원본 데이터를 새 도화지에 그대로 복사 (BitBlt)
+	HDC hDC = m_image.GetDC();
+	m_origImage.BitBlt(hDC, 0, 0);
+	m_image.ReleaseDC();
+}
+
 void CRetroPhotoStudioDlg::OnBnClickedBtnOpen()
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
 	// 1. 파일 탐색기 창 띄우기 (jpg, bmp, png 파일만 보이게 필터링)
-	CFileDialog dlg(TRUE, _T("*.jpg;*.bmp;*.png"), NULL, OFN_FILEMUSTEXIST | OFN_HIDEREADONLY,\
-		_T("Image Files (*.jpg;*.bmp;*.png)|*.jpg;*.bmp;*.png||"), NULL);
+	CFileDialog dlg(TRUE, _T("*.jpg;*.bmp;*.png;*.tif;*.tiff"), NULL, OFN_FILEMUSTEXIST | OFN_HIDEREADONLY,\
+		_T("Image Files (*.jpg;*.bmp;*.png;*.tif;*.tiff)|*.jpg;*.bmp;*.png;*.tif;*.tiff||"), NULL);
 
 	// 사용자가 열기	버튼을 클릭하면
 	if (dlg.DoModal() == IDOK)
 	{
 		// 2. 기존의 메모리 비우기
-		if(!m_image.IsNull())
-		{
-			m_image.Destroy();
-		}
+		if (!m_origImage.IsNull()) m_origImage.Destroy();
 
 		// 3. 선택한 파일 경로 가져오기
 		CString filePath = dlg.GetPathName();
 		// 4. CImage 객체에 이미지 로드하기
-		HRESULT hr = m_image.Load(filePath);
+		HRESULT hr = m_origImage.Load(filePath);
 
 		if (FAILED(hr))
 		{
 			AfxMessageBox(_T("이미지를 로드하는 데 실패했습니다."));
 			return;
 		}
+
+		RestoreOriginalImage();
+
 		// 5. 이미지가 성공적으로 로드되었음을 사용자에게 알리기
 		AfxMessageBox(_T("이미지가 성공적으로 로드되었습니다."));
-
 		Invalidate(); // 이미지가 로드된 후 대화 상자를 다시 그리도록 요청
 	}
 
@@ -217,6 +238,8 @@ void ExtractImageInfo(CImage& image, int& width, int& height, int& pitch, int& b
 
 void CRetroPhotoStudioDlg::OnBnClickedBtnGray()
 {
+	RestoreOriginalImage();
+
 	ProcessPixels([](byte* pPixel, byte R, byte G, byte B) {
 		// 그레이스케일 변환 공식: Gray = 0.299 * R + 0.587 * G + 0.114 * B
 		byte gray = static_cast<byte>(0.299 * R + 0.587 * G + 0.114 * B);
@@ -228,6 +251,8 @@ void CRetroPhotoStudioDlg::OnBnClickedBtnGray()
 
 void CRetroPhotoStudioDlg::OnBnClickedBtnSepia()
 {
+	RestoreOriginalImage();
+
 	// 람다식을 이용해 세피아 공식만 템플릿 함수로 전달
 	ProcessPixels([](byte* pPixel, byte R, byte G, byte B) {
 		int tr = (int)(0.393 * R + 0.769 * G + 0.189 * B);
@@ -238,5 +263,74 @@ void CRetroPhotoStudioDlg::OnBnClickedBtnSepia()
 		pPixel[2] = (tr > 255) ? 255 : (byte)tr; // R
 		pPixel[1] = (tg > 255) ? 255 : (byte)tg; // G
 		pPixel[0] = (tb > 255) ? 255 : (byte)tb; // B
+	});
+}
+
+void CRetroPhotoStudioDlg::OnBnClickedBtnRFilter()
+{
+	RestoreOriginalImage();
+
+	ProcessPixels([](byte* pPixel, byte R, byte G, byte B) {
+		pPixel[0] = 0; // B 날림
+		pPixel[1] = 0; // G 날림
+		pPixel[2] = R; // R 유지
+	});
+}
+
+void CRetroPhotoStudioDlg::OnBnClickedBtnBFilter()
+{
+	RestoreOriginalImage();
+
+	ProcessPixels([](byte* pPixel, byte R, byte G, byte B) {
+		pPixel[0] = B; // B 유지
+		pPixel[1] = 0; // G 날림
+		pPixel[2] = 0; // R 날림
+	});
+}
+
+void CRetroPhotoStudioDlg::OnBnClickedBtnGFilter()
+{
+	RestoreOriginalImage();
+
+	ProcessPixels([](byte* pPixel, byte R, byte G, byte B) {
+		pPixel[0] = 0; // B 날림
+		pPixel[1] = G; // G 유지
+		pPixel[2] = 0; // R 날림
+	});
+}
+
+void CRetroPhotoStudioDlg::OnBnClickedBtnRChannel()
+{
+	RestoreOriginalImage();
+
+	// 채널 추출 (흑백)
+	ProcessPixels([](byte* pPixel, byte R, byte G, byte B) {
+		pPixel[0] = R; // B 자리에 R 값 넣기
+		pPixel[1] = R; // G 자리에 R 값 넣기
+		pPixel[2] = R; // R 자리에 R 값 넣기
+	});
+}
+
+void CRetroPhotoStudioDlg::OnBnClickedBtnBChannel()
+{
+	RestoreOriginalImage();
+
+	// 채널 추출 (흑백)
+	ProcessPixels([](byte* pPixel, byte R, byte G, byte B) {
+		pPixel[0] = B; // B 자리에 R 값 넣기
+		pPixel[1] = B; // G 자리에 R 값 넣기
+		pPixel[2] = B; // R 자리에 R 값 넣기
+	});
+}
+
+void CRetroPhotoStudioDlg::OnBnClickedBtnGChannel()
+{
+	RestoreOriginalImage();
+
+	// 채널 추출 (흑백)
+	ProcessPixels([](byte* pPixel, byte R, byte G, byte B) {
+		pPixel[0] = G; // B 자리에 R 값 넣기
+		pPixel[1] = G; // G 자리에 R 값 넣기
+		pPixel[2] = G; // R 자리에 R 값 넣기
 	});
 }

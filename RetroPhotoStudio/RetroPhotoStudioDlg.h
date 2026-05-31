@@ -12,6 +12,7 @@ class CRetroPhotoStudioDlg : public CDialogEx
 public:
 	CRetroPhotoStudioDlg(CWnd* pParent = nullptr);	// 표준 생성자입니다.
 	CImage m_image; // 이미지 객체를 멤버 변수로 선언
+	CImage m_origImage; // 원본 이미지
 
 // 대화 상자 데이터입니다.
 #ifdef AFX_DESIGN_TIME
@@ -33,11 +34,18 @@ protected:
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
 public:
+	void RestoreOriginalImage(); // 원본 복구
 	template <typename FilterFunc>
 	afx_msg void ProcessPixels(FilterFunc filter);
 	afx_msg void OnBnClickedBtnOpen();
 	afx_msg void OnBnClickedBtnGray();
 	afx_msg void OnBnClickedBtnSepia();
+	afx_msg void OnBnClickedBtnRFilter();
+	afx_msg void OnBnClickedBtnBFilter();
+	afx_msg void OnBnClickedBtnGFilter();
+	afx_msg void OnBnClickedBtnRChannel();
+	afx_msg void OnBnClickedBtnBChannel();
+	afx_msg void OnBnClickedBtnGChannel();
 };
 
 template <typename FilterFunc>
