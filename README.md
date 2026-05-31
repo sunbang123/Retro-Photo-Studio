@@ -2,6 +2,13 @@
 
 > 기술스택: MFC framework
 
+- 확장구현: RGB 필터 / RGB 채널 분리
+
+<img width="600" alt="image" src="https://github.com/user-attachments/assets/3868107a-3217-4aa0-9f99-b7ba08afb4e3" />
+
+- R 채널로 분리 = 빨간색 성분이 많은 곳일수록 화면에서 더 하얗게(밝게)
+
+
 ### MFC (C++)
 
 MFC는 하드웨어와 가장 가까운 C++ 기반이므로, 이미지를 이루는 '픽셀 데이터' 자체를 이해하는 데 최적격입니다.
@@ -15,12 +22,28 @@ MFC는 하드웨어와 가장 가까운 C++ 기반이므로, 이미지를 이루
 
 ### 결과
 
-<img width="400" alt="image" src="https://github.com/user-attachments/assets/60543156-3e6b-4391-ba80-3d0361107099" />
-<br>
-<img width="400" alt="image" src="https://github.com/user-attachments/assets/82a982be-2d12-40ab-bc64-1926008c3d08" />
-<br>
-<img width="400" alt="image" src="https://github.com/user-attachments/assets/3665ddb6-e653-49de-af33-877be850f695" />
-<br>
-<img width="400" alt="image" src="https://github.com/user-attachments/assets/c19122d4-85d1-4fcf-8d7c-927f1ccb7843" />
-<br>
+<details>
+    <summary>사진 열기</summary>
+    <img width="786" height="584" alt="image" src="https://github.com/user-attachments/assets/8382b098-27f9-4507-92a0-c2d6a548cf03" />
+    <img width="797" height="590" alt="image" src="https://github.com/user-attachments/assets/46174901-e0ec-45b4-8fb9-8d686a4f4817" />
+</details>
 
+<details>
+    <summary>흑백 / 세피아 필터</summary>
+    <img width="793" height="588" alt="image" src="https://github.com/user-attachments/assets/05979573-d08b-49e5-8039-9c8f4c66bbc4" />
+    <img width="794" height="587" alt="image" src="https://github.com/user-attachments/assets/99931d04-c7ab-446e-9b4c-8296a999bc51" />
+</details>
+
+<details>
+    <summary>RGB 필터</summary>
+    <img width="795" height="590" alt="image" src="https://github.com/user-attachments/assets/d3d69893-0212-4a1e-8199-bb16b2eefce8" />
+    <img width="795" height="590" alt="image" src="https://github.com/user-attachments/assets/bd069314-2cb7-48ea-abda-0c2322b8b402" />
+    <img width="792" height="588" alt="image" src="https://github.com/user-attachments/assets/054bfd05-a2f4-46c4-8ca5-fe2b2c1b0fab" />
+</details>
+
+<details>
+    <summary>RGB 채널 분리</summary>
+    <img width="796" height="587" alt="image" src="https://github.com/user-attachments/assets/2b6ee58e-d812-4ced-b070-b8fffb94fc64" />
+    <img width="794" height="587" alt="image" src="https://github.com/user-attachments/assets/c4755b7a-7c95-4e4b-9cdc-18cf3871d00e" />
+    <img width="796" height="589" alt="image" src="https://github.com/user-attachments/assets/540dbb10-6165-417c-ae15-28bc1354f54f" />
+</details>
