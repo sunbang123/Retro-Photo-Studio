@@ -37,7 +37,7 @@ MFC는 하드웨어와 가장 가까운 C++ 기반이므로, 이미지를 이루
 <details>
     <summary>RGB 필터</summary>
     <img width="795" height="590" alt="image" src="https://github.com/user-attachments/assets/d3d69893-0212-4a1e-8199-bb16b2eefce8" />
-    <img width="795" height="590" alt="image" src="https://github.com/user-attachments/assets/bd069314-2cb7-48ea-abda-0c2322b8b402" />
+    <img width="796" height="589" alt="image" src="https://github.com/user-attachments/assets/0cb8d25f-db79-4c91-a46b-328bd1c1207d" />
     <img width="792" height="588" alt="image" src="https://github.com/user-attachments/assets/054bfd05-a2f4-46c4-8ca5-fe2b2c1b0fab" />
 </details>
 
