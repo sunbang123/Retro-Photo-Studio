@@ -1,3 +1,6 @@
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/50bead46-e12f-4f74-9fd8-bf091c0df1e7" />
+
+
 # **추억의 사진관 (흑백/세피아 필터 생성기)**
 
 > 기술스택: MFC framework
